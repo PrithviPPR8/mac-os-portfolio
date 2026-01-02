@@ -20,7 +20,7 @@ const renderText = (text, className, baseWeight = 400) => {
 }
 
 const setupTextHover = (container, type) => {
-    if(!container) return;
+    if(!container) return () => {};
 
     const letters = container.querySelectorAll('span');
 
@@ -47,7 +47,19 @@ const setupTextHover = (container, type) => {
         });
     };
 
+    const handleMouseLeave = () => {
+        letters.forEach((letter) => {
+            animateLetter(letter, base, 0.3);
+        });
+    };
+
     container.addEventListener('mousemove', handleMouseMove);
+    container.addEventListener('mouseleave', handleMouseLeave);
+
+    return () => {
+        container.removeEventListener('mousemove', handleMouseMove);
+        container.removeEventListener('mouseleave', handleMouseLeave);
+    };
 }
 
 const Welcome = () => {
@@ -56,8 +68,13 @@ const Welcome = () => {
   const subtitleRef = useRef(null);
 
   useGSAP(() => {
-    setupTextHover(titleRef.current, 'title');
-    setupTextHover(subtitleRef.current, 'subtitle');
+    const titleCleanup = setupTextHover(titleRef.current, 'title');
+    const subtitleCleanup = setupTextHover(subtitleRef.current, 'subtitle');
+
+    return () => {
+        titleCleanup();
+        subtitleCleanup();
+    }
   }, []);
 
   return (
